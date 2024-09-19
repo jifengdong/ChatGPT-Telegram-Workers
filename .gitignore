@@ -145,8 +145,10 @@ out
 
 .idea
 .vscode
-/wrangler.toml
-/wrangler-test.toml
 .vercel
 .wrangler
-package-lock.json
+/config.json
+/wrangler.toml
+/wrangler-test.toml
+/dist/index.cjs
+/dist/index.d.ts
