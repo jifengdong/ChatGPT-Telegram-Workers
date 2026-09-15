@@ -1,0 +1,20 @@
+{
+    // 全仓库类型检查入口:`pnpm run typecheck`。
+    // 只做 tsc build 的编排,不参与打包 —— Workers/server 产物由 esbuild 生成
+    // (见各 app 的 scripts/build.ts),lib 包由 tsc 直接产出 JS + 声明。
+    // web 包不在此列:它只做类型检查(noEmit),由 web 自身的 build 脚本调用。
+    "files": [],
+    "references": [
+        { "path": "packages/lib/types" },
+        { "path": "packages/lib/i18n" },
+        { "path": "packages/lib/telegram" },
+        { "path": "packages/lib/plugins" },
+        { "path": "packages/lib/ai" },
+        { "path": "packages/lib/config" },
+        { "path": "packages/lib/agent" },
+        { "path": "packages/lib/core" },
+        { "path": "packages/test/mocks" },
+        { "path": "packages/apps/workers" },
+        { "path": "packages/apps/server" }
+    ]
+}

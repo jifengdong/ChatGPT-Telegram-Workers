@@ -1,5 +1,21 @@
 # 更新日志
 
+- v1.10.7
+  - 修复 `Groq` 名称拼写错误
+  - 添加 `Xai` 独立Agent支持
+  
+- v1.10.6
+  - 添加`DeepSeek` 和 `Groq`独立Agent支持
+
+- v1.10.5
+  - 添加`Telegram MarkdownV2`完整支持
+
+- v1.10.0
+  - 使用 InlineKeyboards 切换模型
+
+- v1.9.0
+  - 添加插件系统
+
 - v1.8.0
   - 支持Cohere,Anthropic Ai
   - 支持图片输入

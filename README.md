@@ -1,4 +1,3 @@
-
 <h1 align="center">
 ChatGPT-Telegram-Workers
 </h1>
@@ -9,6 +8,9 @@ ChatGPT-Telegram-Workers
 <p align="center">
     <em>Deploy your own Telegram ChatGPT bot on Cloudflare Workers with ease.</em>
 </p>
+<p align="center">
+    <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/TBXark/ChatGPT-Telegram-Workers"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"></a>
+</p>
 
 ## About
 
@@ -18,33 +20,35 @@ You can customize the system initialization information so that your debugged pe
 
 <details>
 <summary>example</summary>
-<img style="max-width: 600px;" alt="image" src="./doc/demo.jpg">
+<img style="max-width: 600px;" alt="image" src="./doc/demo.png">
 </details>
 
 ## Features
 
 - Serverless deployment
-- Multi-platform deployment support (Cloudflare Workers, Vercel, Render[...](doc/en/PLATFORM.md))
-- Adaptation to multiple AI service providers (OpenAI, Azure OpenAI, Cloudflare AI, Cohere, Anthropic, Mistral...)
+- Multi-platform deployment support (Cloudflare Workers, Vercel, Docker[...](doc/en/DEPLOY_OTHERS.md))
+- Adaptation to multiple AI service providers (OpenAI, Cloudflare AI, Cohere, Anthropic, Mistral, DeepSeek, Groq[...](doc/en/CONFIG.md))
+- Web admin panel (Telegram Mini App) to manage AI providers and settings
 - Custom commands (can achieve quick switching of models, switching of robot presets)
-- Support for multiple Telegram bots
+- Simple KV-based configuration
 - Streaming output
 - Multi-language support
 - Text-to-image generation
+- [Plugin System](doc/en/PLUGINS.md), customizable plugins.
 
 ## Documentation
 
-- [How to deploy](./doc/en/DEPLOY.md)
-- [How to set up configuration](./doc/en/CONFIG.md)
-- [Automatic update](./doc/en/ACTION.md)
-- [Support Platform](./doc/en/PLATFORM.md)
-- [Changelog](./doc/en/CHANGELOG.md)
+- [Deploy in one click](https://deploy.workers.cloudflare.com/?url=https://github.com/TBXark/ChatGPT-Telegram-Workers) — Cloudflare clones the repo, creates the KV namespace, asks for your bot token and deploys.
+- [Deploy Cloudflare Workers](./doc/en/DEPLOY.md)
+- [Deploy Vercel, Local, Docker](./doc/en/DEPLOY_OTHERS.md)
+- [Configuration and Commands](./doc/en/CONFIG.md)
+- [Plugin System](./doc/en/PLUGINS.md)
+- [Migrating from v1 to v2](./doc/en/MIGRATION.md)
+- [Change Log](./doc/en/CHANGELOG.md)
 
-## Special thanks
+## Related Projects
 
-![https://www.jetbrains.com/?from=tbxark](https://user-images.githubusercontent.com/9513891/236592683-1ea579cf-08ff-4703-b313-db038f62bab0.svg)
-
-Thanks for the open-source development license provided by [JetBrains](https://www.jetbrains.com/?from=tbxark).
+- [telegram-bot-api-types](https://github.com/TBXark/telegram-bot-api-types) Telegram Bot API SDK with 0 output after compilation, complete documentation, supports all APIs.
 
 ## Contributors
 

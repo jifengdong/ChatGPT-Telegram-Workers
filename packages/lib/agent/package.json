@@ -1,0 +1,19 @@
+{
+    "name": "@chatgpt-telegram-workers/agent",
+    "version": "1.10.7",
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsc -b",
+        "clean": "rm -rf dist && rm -rf node_modules && rm -rf tsconfig.tsbuildinfo",
+        "test": "vitest run"
+    },
+    "dependencies": {
+        "@chatgpt-telegram-workers/ai": "workspace:*",
+        "@chatgpt-telegram-workers/config": "workspace:*"
+    },
+    "devDependencies": {
+        "vitest": "^4.1.11"
+    }
+}

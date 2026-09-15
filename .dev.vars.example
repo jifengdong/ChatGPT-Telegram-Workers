@@ -1,0 +1,23 @@
+# Runtime credentials for ChatGPT-Telegram-Workers. `wrangler dev` reads this
+# file as `.dev.vars` (gitignored); the Deploy to Cloudflare button shows the
+# same keys as secrets to fill in during deployment. Copy to `.dev.vars` for
+# local development.
+
+# Required: Telegram bot token from @BotFather (/newbot).
+TELEGRAM_TOKEN=
+
+# Required: your Telegram user id from @userinfobot. Authorizes the admin
+# panel and private-chat commands.
+ADMIN_ID=
+
+# Optional: password for signing in to /admin from a plain browser outside
+# Telegram. Leave empty to allow only the Telegram Mini App.
+ADMIN_PASSWORD=
+
+# Optional: registered as the webhook secret_token and verified on every
+# Telegram update, so forged requests are rejected.
+# TELEGRAM_SECRET_TOKEN=
+
+# Optional: public HTTPS base URL, preferred over the publicBaseUrl stored in
+# the admin panel. When unset the worker discovers its own host on /init.
+# PUBLIC_BASE_URL=

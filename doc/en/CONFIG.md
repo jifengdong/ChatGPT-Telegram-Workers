@@ -1,222 +1,100 @@
 # Configuration
 
-It is recommended to fill in environment variables in the Workers configuration interface instead of directly modifying variables in the JS code.
+Configuration is split into two parts:
 
-## KV configuration
+1. **Environment variables / bindings** — the minimum required to start the bot.
+2. **Admin panel** — everything else (AI providers, prompts, permissions, plugins, …), stored as a single JSON document in KV.
 
-| KEY      | Description                                                                                                       |
-|:---------|-------------------------------------------------------------------------------------------------------------------|
-| DATABASE | First, create a KV. When creating it, the name can be arbitrary, but when binding it, it must be set as DATABASE. |
+## 1. Environment variables
 
-## System Configuration
+| Variable | Required | Description |
+|---|---|---|
+| `TELEGRAM_TOKEN` | yes | Bot token from [@BotFather](https://t.me/BotFather). A single token. |
+| `ADMIN_ID` | recommended | Your Telegram user id. Authorizes the admin panel (via Telegram Mini App `initData`) and restricts private-chat commands to you. |
+| `ADMIN_PASSWORD` | no | Fallback password for the admin panel when opened outside Telegram. If unset, password login is disabled (Mini App only). |
+| `PUBLIC_BASE_URL` | no | Public HTTPS base URL of the deployment. Takes precedence over the value saved in the admin panel; when unset, the first `/init` saves the detected domain into the admin panel config automatically. |
+| `TELEGRAM_SECRET_TOKEN` | no | Optional webhook secret. When set, it is passed to `setWebhook` as `secret_token` and every incoming update must carry the matching `X-Telegram-Bot-Api-Secret-Token` header, blocking forged updates. |
 
-The configuration that is common to each user can only be configured and filled in through the Workers configuration interface or toml, and it is not supported to modify it by sending messages through Telegram.
+Bindings (Cloudflare / runtime):
 
-> `array string`:  An empty string in the array indicates that no value has been set. If a value needs to be set, it should be set as `'value1,value2'`, with multiple values separated by commas.
+| Binding | Required | Description |
+|---|---|---|
+| `DATABASE` | yes | KV namespace used for bot history, caches and the global config JSON. |
+| `AI` | no | Workers AI binding, declared in the shipped `wrangler.jsonc`. Needed only if you use the `workers` provider *and* want to skip the account id + token. |
+| `API_GUARD` | no | Optional Worker used to protect the webhook (`/telegram/:token/safehook`). |
 
-### Basic configuration
+> All previously supported environment variables (`OPENAI_API_KEY`, `TELEGRAM_AVAILABLE_TOKENS`, `LOCK_USER_CONFIG_KEYS`, `CUSTOM_COMMAND_*`, `PLUGIN_COMMAND_*`, …) are **removed**. Configure providers and options in the admin panel instead.
 
-| KEY                       | Name                      | Default  | Description                               |
-|---------------------------|---------------------------|----------|-------------------------------------------|
-| LANGUAGE                  | Language                  | `zh-cn`  | Menu language                             |
-| UPDATE_BRANCH             | Update branch             | `master` | Check the branch for updates              |
-| CHAT_COMPLETE_API_TIMEOUT | Chat complete API timeout | `0`      | Timeout for AI conversation API (seconds) |
+## 2. Admin panel
 
-### Telegram configuration
+Open `https://<your-domain>/admin`.
 
-| KEY                       | Name                           | Default                                    | Description                                                                                                   |
-|---------------------------|--------------------------------|--------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| TELEGRAM_API_DOMAIN       | Telegram API Domain            | `https://api.telegram.org/`                | Telegram API domain                                                                                           |
-| TELEGRAM_AVAILABLE_TOKENS | Available Telegram tokens.     | `''`(array string)                         | Telegram Tokens allowed to access, separated by commas when setting.                                          |
-| DEFAULT_PARSE_MODE        | Default parsing mode.          | `Markdown`                                 | Default message parsing mode.                                                                                 |
-| I_AM_A_GENEROUS_PERSON    | Allow everyone to use.         | `false`                                    | Is it allowed for everyone to use?                                                                            |
-| CHAT_WHITE_LIST           | Chat whitelist                 | `''`(array string)                         | Allowed Chat ID Whitelist                                                                                     |
-| LOCK_USER_CONFIG_KEYS     | Locked user configuration key. | The default value is the URL for all APIs. | Configuration key to prevent token leakage caused by replacement.                                             |
-| TELEGRAM_BOT_NAME         | Telegram bot name              | `''`(array string)                         | The Bot Name corresponding to the Telegram Token that is allowed to access, separated by commas when setting. |
-| CHAT_GROUP_WHITE_LIST     | Group whitelist                | `''`(array string)                         | Allowed group ID whitelist.                                                                                   |
-| GROUP_CHAT_BOT_ENABLE     | Whether to enable group bots.  | `true`                                     | Whether to enable group robots.                                                                               |
-| GROUP_CHAT_BOT_SHARE_MODE | Group robot sharing mode       | `true`                                     | After opening, people in the same group use the same chat context.                                            |
+- Inside Telegram, open it from the `/admin` command (Mini App). The bot validates Telegram `initData` and matches `ADMIN_ID`, so no password is needed.
+- Outside Telegram, log in with `ADMIN_PASSWORD` if it is set.
 
-> IMPORTANT: You must add the group ID to the whitelist `CHAT_GROUP_WHITE_LIST` to use it, otherwise anyone can add your bot to the group and consume your quota.
+### Tabs
 
-> IMPORTANT: Due to Telegram's privacy and security policies, if your group is a public group or has more than 2000 members, please set the bot as an `administrator`, otherwise the bot will not respond to chat messages with `@bot`.
+- **Chat Providers** — add AI chat providers. Each provider has a Name, Base URL, API key, an **API format** (protocol) and an allowed **model list**. Use **Fetch models** to pull the list from the endpoint (ends with `/models`), then click to add models; if the endpoint has no model list, use **+ Add model** to type names manually. Pick one model as active and mark one provider as default.
+- **Image Providers** — same, for image generation. Generation parameters differ per protocol and model (`size`/`quality`/`style` for OpenAI, `negative_prompt`/`width`/`height`/`num_steps`/`guidance` for Workers AI models), so each provider has its own **Extra Params** JSON merged into the request body; `prompt` stays authoritative.
+- **Settings** — global options that used to be environment variables: public base URL, system prompt, permissions, history limits, streaming, …
+- **Plugins** — request-template commands (JSON template or URL) with their own env map.
+- **Custom Commands** — shortcuts. When the value starts with `/setenv`, `/setenvs`, `/delenv`, or JSON, it is applied as a config patch to the global config; otherwise it expands to another command as a text alias.
 
-> IMPORTANT: You must set `/setprivacy` to `Disable` in botfather, otherwise the bot will not respond to chat messages with `@bot`.
+Saving writes the whole config as JSON to the KV key `config:global`.
 
-#### Lock configuration `LOCK_USER_CONFIG_KEYS`
+### Shortcuts (config patches)
 
-> IMPORTANT: If you encounter the error "Key XXX is locked", it means that your configuration is locked and needs to be unlocked before modification.
+Custom Commands can modify the global config directly, which is how you quickly switch the default provider or model — the equivalent of the old `CUSTOM_COMMAND_*` variables:
 
-The default value of `LOCK_USER_CONFIG_KEYS` is the BASE URL of all APIs. In order to prevent users from replacing the API BASE URL and causing token leakage, the BASE URL of all APIs is locked by default. If you want to unlock the BASE URL of a certain API, you can remove it from `LOCK_USER_CONFIG_KEYS`.
-`LOCK_USER_CONFIG_KEYS` is a string array with a default value is 
+| Command | Value | Purpose |
+|---|---|---|
+| `/gpt4` | `/setenvs {"defaultChatProvider":"openai"}` | Switch the default chat provider |
+| `/fast` | `/setenv settings.systemInitMessage=You are a concise assistant` | Change one setting via a dot path |
+| `/img-openai` | `/setenvs {"defaultImageProvider":"openai"}` | Switch the default image provider |
+| `/reset-prompt` | `/delenv settings.systemInitMessage` | Reset one setting to its default |
+
+Supported forms:
+
+- `/setenv KEY=VALUE` — `KEY` is a dot path, e.g. `settings.systemInitMessage` or `defaultChatProvider`.
+- `/setenvs {json}` — a JSON object patch: the top-level `settings` key is merged per field, `chatProviders`/`imageProviders`/`plugins`/`customCommands` are merged by element `id`, anything else overwrites. Unknown keys are rejected instead of silently ignored.
+- `/delenv KEY` — resets `settings.xxx` to its default; clears `defaultChatProvider`/`defaultImageProvider`.
+- A bare JSON object starting with `{`, equivalent to `/setenvs`.
+
+`/setenv`, `/setenvs` and `/delenv` are also available directly in chat (no custom command needed). Shortcuts write to the global config, so only `ADMIN_ID` itself or group administrators may trigger them; anyone else gets a permission error. They change the global default and do not provide per-chat config.
+
+### API formats
+
+Providers are no longer tied to a vendor list. Choose the API format that matches the endpoint:
+
+| API format | Protocol | Notes |
+|---|---|---|
+| `chat-completions` | OpenAI Chat Completions | `/v1/chat/completions`, default for OpenAI-compatible endpoints |
+| `anthropic-messages` | Anthropic Messages | `/v1/messages` |
+| `responses` | OpenAI Responses | `/v1/responses` |
+| `workers` | Cloudflare Workers AI | uses the `AI` binding, or account id + token when the binding is absent |
+
+For images, the API formats are `images` (OpenAI `/v1/images/generations`) and `workers`.
+
+The `workers` format ignores the **Base URL** and **API Key** fields — its endpoint and credentials come from the `AI` binding (or the `Account ID` / `API Token` options when no binding is deployed), so the form hides both fields for that format. When an `AI` binding is present you can leave `Account ID` and `API Token` empty and the provider still works. Without a binding, an `Account ID` + `API Token` pair is required; a provider missing both is skipped instead of failing on first use.
+
+**Fetch models** lists models through the binding when one is present, otherwise through the account-level Cloudflare API. Either way the results are split by task type, so the chat tab offers text-generation models and the image tab offers text-to-image models.
+
+Some newer image models — the `@cf/black-forest-labs/flux-2-*` family — accept only a `multipart/form-data` body, not JSON, so a plain JSON request fails with `5006: required properties at '/' are 'multipart'`. The bot detects those models and encodes the request as multipart automatically; if you hit that error on a model not yet covered, it retries as multipart once and remembers the model.
+
+Name your provider anything (e.g. `DeepSeek`, `Groq`, `Mistral`); any OpenAI-compatible endpoint works with `chat-completions`. Existing vendor-named configs (including `azure` and `gemini`) are migrated automatically on load.
+
+Azure OpenAI expects the key in an `api-key` header rather than `Authorization: Bearer`. Set the provider's **API Key Header** option to `api-key`; leave it empty for every other provider.
+
+## 3. `/init`
+
+After configuring `publicBaseUrl` in the admin panel, click **Bind Webhook** on the home page (or visit `/init` once) to register the webhook and command menu:
 
 ```
-OPENAI_API_BASE,GOOGLE_COMPLETIONS_API,MISTRAL_API_BASE,COHERE_API_BASE,ANTHROPIC_API_BASE,AZURE_COMPLETIONS_API,AZURE_DALLE_API
+https://<your-domain>/init
 ```
 
-### History configuration
+The web pages are served by the `@chatgpt-telegram-workers/web` package: `/` (home + usage guide), `/admin` (admin panel) and `/interpolate` (interpolation template tester).
 
-| KEY                | Name                                  | Default | Description                                                   |
-|--------------------|---------------------------------------|---------|---------------------------------------------------------------|
-| AUTO_TRIM_HISTORY  | Automatic trimming of message history | `true`  | Automatically trim messages to avoid the 4096 character limit |
-| MAX_HISTORY_LENGTH | Maximum length of message history     | `20`    | Maximum number of message history entries to keep             |
-| MAX_TOKEN_LENGTH   | Maximum token length                  | `20480` | Maximum token length for message history                      |
+## Local / Docker
 
-### Feature configuration
-
-| KEY                   | Name                    | Default            | Description                                                 |
-|-----------------------|-------------------------|--------------------|-------------------------------------------------------------|
-| HIDE_COMMAND_BUTTONS  | Hide command buttons    | `''`(array string) | Need to re-initiate after modification                      |
-| SHOW_REPLY_BUTTON     | Show quick reply button | `false`            | Whether to display the quick reply button                   |
-| EXTRA_MESSAGE_CONTEXT | Extra message context   | `false`            | The referenced message will also be included in the context |
-| STREAM_MODE           | Stream mode             | `true`             | Typewriter mode                                             |
-| SAFE_MODE             | Safe mode               | `true`             | When enabled, the ID of the latest message will be saved    |
-| DEBUG_MODE            | Debug mode              | `false`            | When enabled, the latest message will be saved              |
-| DEV_MODE              | Development mode        | `false`            | When enabled, more debugging information will be displayed  |
-
-## User configuration
-
-Each user's custom configuration can only be modified by sending a message through Telegram. The message format is `/setenv KEY=VALUE`. User configurations have a higher priority than system configurations. If you want to delete a configuration, please use `/delenv KEY`. To set variables in batches, please use `/setenvs {"KEY1": "VALUE1", "KEY2": "VALUE2"}`.
-
-### General configuration
-
-| KEY                      | Name                                 | Default                       | Description                                                                |
-|--------------------------|--------------------------------------|-------------------------------|----------------------------------------------------------------------------|
-| AI_PROVIDER              | AI provider                          | `auto`                        | Options `auto, openai, azure, workers, gemini, mistral, cohere, anthropic` |
-| AI_IMAGE_PROVIDER        | AI image provider                    | `auto`                        | Options `auto, openai, azure, workers`                                     |
-| SYSTEM_INIT_MESSAGE      | Default initialization message.      | `You are a helpful assistant` | Automatically select default values based on the bound language.           |
-| SYSTEM_INIT_MESSAGE_ROLE | Default initialization message role. | `system`                      |                                                                            |
-
-### OpenAI
-
-| KEY                     | Name                    | Default                     | 
-|-------------------------|-------------------------|-----------------------------|
-| OPENAI_API_KEY          | OpenAI API Key          | `''`(array string)          |
-| OPENAI_CHAT_MODEL       | OpenAI Model            | `gpt-4o-mini`               |
-| OPENAI_API_BASE         | OpenAI API BASE         | `https://api.openai.com/v1` |
-| OPENAI_API_EXTRA_PARAMS | OpenAI API Extra Params | `{}`                        |
-| DALL_E_MODEL            | DALL-E model name.      | `dall-e-2`                  |
-| DALL_E_IMAGE_SIZE       | DALL-E Image size       | `512x512`                   |
-| DALL_E_IMAGE_QUALITY    | DALL-E Image quality    | `standard`                  |
-| DALL_E_IMAGE_STYLE      | DALL-E Image style      | `vivid`                     |
-
-### Azure OpenAI
-
-> AZURE_COMPLETIONS_API `https://RESOURCE_NAME.openai.azure.com/openai/deployments/MODEL_NAME/chat/completions?api-version=VERSION_NAME`
-
-> AZURE_DALLE_API `https://RESOURCE_NAME.openai.azure.com/openai/deployments/MODEL_NAME/images/generations?api-version=VERSION_NAME`
-
-| KEY                   | Name                  | Default | 
-|-----------------------|-----------------------|---------|
-| AZURE_API_KEY         | Azure API Key         | `null`  |
-| AZURE_COMPLETIONS_API | Azure Completions API | `null`  |
-| AZURE_DALLE_API       | Azure DallE API       | `null`  |
-
-### Workers
-
-| KEY                   | Name                  | Default                                        | 
-|-----------------------|-----------------------|------------------------------------------------|
-| CLOUDFLARE_ACCOUNT_ID | Cloudflare Account ID | `null`                                         |
-| CLOUDFLARE_TOKEN      | Cloudflare Token      | `null`                                         |
-| WORKERS_CHAT_MODEL    | Text Generation Model | `@cf/mistral/mistral-7b-instruct-v0.1 `        |
-| WORKERS_IMAGE_MODEL   | Text-to-Image Model   | `@cf/stabilityai/stable-diffusion-xl-base-1.0` |
-
-### Gemini
-
-| KEY                      | Name                  | Default                                                    | 
-|--------------------------|-----------------------|------------------------------------------------------------|
-| GOOGLE_API_KEY           | Google Gemini API Key | `null`                                                     |
-| GOOGLE_COMPLETIONS_API   | Google Gemini API     | `https://generativelanguage.googleapis.com/v1beta/models/` |
-| GOOGLE_COMPLETIONS_MODEL | Google Gemini Model   | `gemini-pro`                                               |
-
-> Cloudflare Workers currently do not support accessing Gemini.
-
-### Mistral
-
-| KEY                | Name              | Default                     | 
-|--------------------|-------------------|-----------------------------|
-| MISTRAL_API_KEY    | Mistral API Key   | `null`                      |
-| MISTRAL_API_BASE   | Mistral API Base  | `https://api.mistral.ai/v1` |
-| MISTRAL_CHAT_MODEL | Mistral API Model | `mistral-tiny`              |
-
-### Cohere
-
-| KEY               | Name             | Default                     | 
-|-------------------|------------------|-----------------------------|
-| COHERE_API_KEY    | Cohere API Key   | `null`                      |
-| COHERE_API_BASE   | Cohere API Base  | `https://api.cohere.com/v1` |
-| COHERE_CHAT_MODEL | Cohere API Model | `command-r-plus`            |
-
-### Anthropic
-
-| KEY                  | Name                | Default                        | 
-|----------------------|---------------------|--------------------------------|
-| ANTHROPIC_API_KEY    | Anthropic API Key   | `null`                         |
-| ANTHROPIC_API_BASE   | Anthropic API Base  | `https://api.anthropic.com/v1` |
-| ANTHROPIC_CHAT_MODEL | Anthropic API Model | `claude-3-haiku-20240307`      |
-
-## Command
-
-| Command    | Description                                                             | Example                                         |
-|:-----------|:------------------------------------------------------------------------|:------------------------------------------------|
-| `/help`    | Get command help.                                                       | `/help`                                         |
-| `/new`     | Initiate a new conversation.                                            | `/new`                                          |
-| `/start`   | Get your ID and start a new conversation.                               | `/start`                                        |
-| `/img`     | Generate an image.                                                      | `/img Image Description`                        |
-| `/version` | Get the current version number and determine if an update is needed.    | `/version`                                      |
-| `/setenv`  | Set user configuration, see `User Configuration` for details.           | `/setenv KEY=VALUE`                             |
-| `/setenvs` | Batch setting user configuration, see "User Configuration" for details. | `/setenvs {"KEY1": "VALUE1", "KEY2": "VALUE2"}` |
-| `/delenv`  | Delete user configuration.                                              | `/delenv KEY`                                   |
-| `/system`  | View some current system information.                                   | `/system`                                       |
-| `/redo`    | Edit the previous question or provide a different answer.               | `/redo Modified content.` or `/redo`            |
-| `/echo`    | Echo message, only available in development mode.                       | `/echo`                                         |
-
-## Custom command
-
-In addition to the commands defined by the system, you can also customize shortcut commands, which can simplify some longer commands into a single word command.
-
-Custom commands use environment variables to set `CUSTOM_COMMAND_XXX`, where XXX is the command name, such as `CUSTOM_COMMAND_azure`, and the value is the command content, such as `/setenvs {"AI_PROVIDER": "azure"}`. This allows you to use `/azure` instead of `/setenvs {"AI_PROVIDER": "azure"}` to quickly switch AI providers.
-
-Here are some examples of custom commands.
-
-| Command                | Value                                                                                                             |
-|------------------------|-------------------------------------------------------------------------------------------------------------------|
-| CUSTOM_COMMAND_azure   | `/setenvs {"AI_PROVIDER": "azure"}`                                                                               |
-| CUSTOM_COMMAND_workers | `/setenvs {"AI_PROVIDER": "workers"}`                                                                             |
-| CUSTOM_COMMAND_gpt3    | `/setenvs {"AI_PROVIDER": "openai", "OPENAI_CHAT_MODEL": "gpt-3.5-turbo"}`                                        |
-| CUSTOM_COMMAND_gpt4    | `/setenvs {"AI_PROVIDER": "openai", "OPENAI_CHAT_MODEL": "gpt-4"}`                                                |
-| CUSTOM_COMMAND_cn2en   | `/setenvs {"SYSTEM_INIT_MESSAGE": "You are a translator. Please translate everything I say below into English."}` |
-
-If you are using TOML for configuration, you can use the following method:
-
-```toml
-CUSTOM_COMMAND_azure= '/setenvs {"AI_PROVIDER": "azure"}'
-CUSTOM_COMMAND_workers = '/setenvs {"AI_PROVIDER": "workers"}'
-CUSTOM_COMMAND_gpt3 = '/setenvs {"AI_PROVIDER": "openai", "OPENAI_CHAT_MODEL": "gpt-3.5-turbo"}'
-CUSTOM_COMMAND_gpt4 = '/setenvs {"AI_PROVIDER": "openai", "OPENAI_CHAT_MODEL": "gpt-4"}'
-CUSTOM_COMMAND_cn2en = '/setenvs {"SYSTEM_INIT_MESSAGE": "You are a translator. Please translate everything I say below into English."}'
-```
-
-## Custom commands description
-
-If you want to add help information for a custom command, you can use environment variables to set `COMMAND_DESCRIPTION_XXX`, where `XXX` is the name of the command, such as `COMMAND_DESCRIPTION_azure`, and the value is the description of the command, such as `Switch AI provider to Azure`. This way, you can use `/help` to view the help information for the custom command.
-
-The following are some examples of custom command help information.
-
-| Command                     | Description                                      | Value                                                                                                             |
-|-----------------------------|--------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
-| COMMAND_DESCRIPTION_azure   | Switch AI provider to Azure.                     | `/setenvs {"AI_PROVIDER": "azure"}`                                                                               |
-| COMMAND_DESCRIPTION_workers | Switch AI provider to Workers                    | `/setenvs {"AI_PROVIDER": "workers"}`                                                                             |
-| COMMAND_DESCRIPTION_gpt3    | Switch AI provider to OpenAI GPT-3.5 Turbo.      | `/setenvs {"AI_PROVIDER": "openai", "OPENAI_CHAT_MODEL": "gpt-3.5-turbo"}`                                        |
-| COMMAND_DESCRIPTION_gpt4    | Switch AI provider to OpenAI GPT-4.              | `/setenvs {"AI_PROVIDER": "openai", "OPENAI_CHAT_MODEL": "gpt-4"}`                                                |
-| COMMAND_DESCRIPTION_cn2en   | Translate the conversation content into English. | `/setenvs {"SYSTEM_INIT_MESSAGE": "You are a translator. Please translate everything I say below into English."}` |
-
-If you are using TOML for configuration, you can use the following method:
-
-```toml
-COMMAND_DESCRIPTION_azure = '/setenvs {"AI_PROVIDER": "azure"}'
-COMMAND_DESCRIPTION_workers = '/setenvs {"AI_PROVIDER": "workers"}'
-COMMAND_DESCRIPTION_gpt3 = '/setenvs {"AI_PROVIDER": "openai", "OPENAI_CHAT_MODEL": "gpt-3.5-turbo"}'
-COMMAND_DESCRIPTION_gpt4 = '/setenvs {"AI_PROVIDER": "openai", "OPENAI_CHAT_MODEL": "gpt-4"}'
-COMMAND_DESCRIPTION_cn2en = '/setenvs {"SYSTEM_INIT_MESSAGE": "You are a translator. Please translate everything I say below into English."}'
-```
+See [DEPLOY_OTHERS.md](./DEPLOY_OTHERS.md) — the runtime `config.json` only configures the database, server and proxy; all bot configuration still lives in the admin panel.

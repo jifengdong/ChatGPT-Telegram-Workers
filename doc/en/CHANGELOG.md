@@ -1,5 +1,21 @@
 # Changelog
 
+- v1.10.7
+  - Fixed a typo in "Groq"
+  - Added support for independent Xai Agents
+  
+- v1.10.6
+  - Add `DeepSeek` and `Groq` independent Agent support
+
+- v1.10.5
+  - Add full support for `Telegram MarkdownV2`
+
+- v1.10.0
+  - Switching Models with InlineKeyboards
+
+- v1.9.0
+  - Add plugin system
+
 - v1.8.0
   - Support Cohere, Anthropic Ai
   - Support image input.

@@ -1,0 +1,14 @@
+{
+  "name": "@chatgpt-telegram-workers/server",
+  "version": "1.10.7",
+  "type": "module",
+  "main": "./dist/node.js",
+  "dependencies": {
+    "ioredis": "^6.0.0",
+    "jsonc-parser": "^3.3.1",
+    "sqlite3": "^6.0.1",
+    "telegram-bot-api-types": "^10.2.0",
+    "telegramify-markdown": "^1.3.3",
+    "undici": "^8.10.2"
+  }
+}

@@ -1,0 +1,19 @@
+{
+    "extends": "../../../tsconfig.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "paths": {
+            "#/*": ["./src/*"]
+        },
+        "types": ["node", "vitest/globals"],
+        "outDir": "./dist"
+    },
+    "references": [
+        { "path": "../agent" },
+        { "path": "../config" },
+        { "path": "../i18n" },
+        { "path": "../plugins" },
+        { "path": "../telegram" }
+    ],
+    "include": ["src/**/*"]
+}

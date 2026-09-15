@@ -1,0 +1,15 @@
+{
+    "extends": "../../../tsconfig.json",
+    "compilerOptions": {
+        "rootDir": ".",
+        "types": ["node", "vite/client"],
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        // 本包产物(内联 HTML 的字符串模块)完全由 vite 生成,公开类型是根目录手写的
+        // index.d.ts。因此这里只做类型检查,不参与声明产出,避免 tsc 往 vite 的 dist 里写文件。
+        "composite": false,
+        "noEmit": true,
+        "declaration": false,
+        "declarationMap": false
+    },
+    "include": ["src/**/*", "plugin/**/*", "vite.config.ts"]
+}

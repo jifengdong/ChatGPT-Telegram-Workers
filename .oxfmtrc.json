@@ -1,0 +1,17 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "tabWidth": 4,
+    "singleQuote": true,
+    "semi": true,
+    "printWidth": 120,
+    "arrowParens": "avoid",
+    "ignorePatterns": [
+        "dist",
+        "**/dist/**",
+        "**/node_modules/**",
+        "**/generated/**",
+        "**/vendor/**",
+        "pnpm-lock.yaml",
+        "**/package-docker.json"
+    ]
+}

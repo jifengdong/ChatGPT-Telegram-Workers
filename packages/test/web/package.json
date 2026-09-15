@@ -1,0 +1,16 @@
+{
+    "name": "@chatgpt-telegram-workers/test-web",
+    "version": "1.10.7",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "test:browser": "playwright test",
+        "test:browser:headed": "playwright test --headed",
+        "install:browser": "playwright install chromium",
+        "clean": "rm -rf node_modules test-results playwright-report"
+    },
+    "devDependencies": {
+        "@chatgpt-telegram-workers/test-mocks": "workspace:*",
+        "@playwright/test": "^1.63.0"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "packages/apps/server/dist/vercel.js",
+            "use": "@vercel/node",
+            "config": {
+                "includeFiles": ["packages/apps/server/dist/**"]
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "packages/apps/server/dist/vercel.js"
+        }
+    ]
+}

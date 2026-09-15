@@ -1,0 +1,27 @@
+{
+    "name": "@chatgpt-telegram-workers/core",
+    "version": "1.10.7",
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "imports": {
+        "#/*": "./src/*"
+    },
+    "scripts": {
+        "build": "tsc -b",
+        "clean": "rm -rf dist && rm -rf node_modules && rm -rf tsconfig.tsbuildinfo",
+        "test": "vitest run"
+    },
+    "dependencies": {
+        "@chatgpt-telegram-workers/agent": "workspace:*",
+        "@chatgpt-telegram-workers/config": "workspace:*",
+        "@chatgpt-telegram-workers/i18n": "workspace:*",
+        "@chatgpt-telegram-workers/plugins": "workspace:*",
+        "@chatgpt-telegram-workers/telegram": "workspace:*",
+        "@chatgpt-telegram-workers/web": "workspace:*",
+        "telegram-bot-api-types": "^10.2.0"
+    },
+    "devDependencies": {
+        "vitest": "^4.1.11"
+    }
+}

@@ -1,0 +1,36 @@
+{
+    // Cloudflare Workers Builds deploys this file as-is — you don't need to edit it:
+    //   - the DATABASE KV namespace id is injected at deploy time from the DEPLOY_KV_NAMESPACE_ID build variable
+    //   - bot credentials (TELEGRAM_TOKEN, ADMIN_ID, ...) are managed in the dashboard
+    //     under Settings -> Variables and Secrets
+    //
+    // For CLI deploys (`pnpm run deploy`) fill in the KV namespace id below
+    // and add a "vars" block with your bot credentials.
+    "$schema": "./node_modules/wrangler/config-schema.json",
+    "name": "chatgpt-telegram-workers",
+    // Bundles directly from the TypeScript source; workspace dependencies resolve to
+    // their built output. The root dist/ folder is only for copy-paste deployments in
+    // the Cloudflare dashboard.
+    "main": "./packages/apps/workers/src/index.ts",
+    // Build the workspace packages before bundling, so that any `wrangler` command
+    // (`deploy`, `versions upload`, including the Cloudflare Workers Builds defaults)
+    // can resolve `@chatgpt-telegram-workers/*` without a separate build step.
+    // `-w` runs the root script when wrangler is invoked from a subpackage.
+    "build": { "command": "pnpm -w run build:workers" },
+    // nodejs_compat is enabled by default at this date, no compatibility flags needed.
+    "compatibility_date": "2026-08-04",
+
+    // Never delete dashboard variables on deploy (secrets are always preserved).
+    "keep_vars": true,
+
+    // Workers AI binding, used by the `workers` API format in the admin panel.
+    // Declared here rather than added in the dashboard: `wrangler deploy` reconciles
+    // bindings from this file, so a dashboard-only binding is dropped on the next
+    // deploy (keep_vars above only protects vars/secrets, not bindings).
+    "ai": { "binding": "AI" },
+
+    // `local` is the wrangler dev placeholder for "not configured" and passes config
+    // validation. Cloudflare Workers Builds replaces it via the DEPLOY_KV_NAMESPACE_ID
+    // build variable; CLI deploys replace it with a real id here.
+    "kv_namespaces": [{ "binding": "DATABASE", "id": "local" }],
+}

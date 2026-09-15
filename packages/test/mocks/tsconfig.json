@@ -1,0 +1,12 @@
+{
+    "extends": "../../../tsconfig.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "types": ["node", "vitest/globals"],
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        "outDir": "./dist",
+        // 测试桩:只做类型检查,不产出 JS
+        "emitDeclarationOnly": true
+    },
+    "include": ["src/**/*"]
+}

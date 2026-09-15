@@ -1,0 +1,27 @@
+/* eslint-disable */
+export default {
+    env: { system_init_message: 'Você é um assistente útil' },
+    command: {
+        help: {
+            summary: 'Os seguintes comandos são suportados atualmente:\n',
+            help: 'Obter ajuda sobre comandos',
+            new: 'Iniciar uma nova conversa',
+            start: 'Obter seu ID e iniciar uma nova conversa',
+            img: 'Gerar uma imagem, o formato completo do comando é `/img descrição da imagem`, por exemplo `/img praia ao luar`',
+            version: 'Obter o número da versão atual para determinar se é necessário atualizar',
+            system: 'Ver algumas informações do sistema',
+            redo: 'Refazer a última conversa, /redo com conteúdo modificado ou diretamente /redo',
+            echo: 'Repetir a mensagem',
+            models: 'Mudar o modelo de diálogo',
+            admin: 'Abrir o painel de administração (Mini App)',
+        },
+        new: { new_chat_start: 'Uma nova conversa foi iniciada' },
+    },
+    callback_query: {
+        open_model_list: 'Abra a lista de modelos',
+        select_provider: 'Escolha um fornecedor de modelos.:',
+        select_model: 'Escolha um modelo:',
+        change_model: 'O modelo de diálogo já foi modificado para',
+        back: 'Voltar',
+    },
+};

@@ -1,0 +1,14 @@
+{
+    "name": "@chatgpt-telegram-workers/workers",
+    "version": "1.10.7",
+    "type": "module",
+    "main": "./dist/index.js",
+    "scripts": {
+        "build": "pnpm tsx scripts/build.ts && pnpm tsx scripts/check-bundle.ts",
+        "clean": "rm -rf dist && rm -rf node_modules && rm -rf tsconfig.tsbuildinfo",
+        "deploy": "wrangler deploy --config ${WRANGLER_PATH}"
+    },
+    "dependencies": {
+        "@chatgpt-telegram-workers/core": "workspace:*"
+    }
+}

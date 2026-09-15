@@ -1,0 +1,1224 @@
+/* ============================================================
+   ChatGPT-Telegram-Workers Web UI — iOS 风格扁平设计系统
+   手写组件,无第三方 CSS/JS 库。仿原生 iOS:
+   导航栏 + 底部标签栏 + 分组内嵌列表 + 页面 push 转场。
+   深浅色跟随系统;移动端优先,桌面自动居中为应用列宽。
+   ============================================================ */
+
+:root {
+    /* iOS 系统色(浅色) */
+    --bg: #f2f2f7;
+    --bg-elevated: #ffffff;
+    --fill-1: rgba(120, 120, 128, 0.16);
+    --fill-2: rgba(120, 120, 128, 0.26);
+    --text: #000000;
+    --text-2: #6c6c70;
+    --text-3: #8e8e93;
+    --sep: rgba(60, 60, 67, 0.24);
+
+    --blue: #007aff;
+    --green: #34c759;
+    --red: #ff3b30;
+    --orange: #ff9500;
+    --purple: #af52de;
+    --teal: #30b0c7;
+
+    --nav-h: 44px;
+    --tab-h: 49px;
+    --radius-group: 12px;
+    --blur-bg: color-mix(in srgb, var(--bg) 78%, transparent);
+
+    --font:
+        -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei',
+        sans-serif;
+    --mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+    --push-ease: cubic-bezier(0.32, 0.72, 0, 1);
+    --push-ms: 340ms;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #000000;
+        --bg-elevated: #1c1c1e;
+        --fill-1: rgba(120, 120, 128, 0.32);
+        --fill-2: rgba(120, 120, 128, 0.44);
+        --text: #ffffff;
+        --text-2: rgba(235, 235, 245, 0.66);
+        --text-3: rgba(235, 235, 245, 0.42);
+        --sep: rgba(84, 84, 88, 0.6);
+
+        --blue: #0a84ff;
+        --green: #30d158;
+        --red: #ff453a;
+        --orange: #ff9f0a;
+        --purple: #bf5af2;
+        --teal: #40cbe0;
+
+        --blur-bg: color-mix(in srgb, var(--bg) 72%, transparent);
+    }
+}
+
+/* ---------- 基础 ---------- */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 17px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+    margin: 0;
+}
+
+a {
+    color: var(--blue);
+    text-decoration: none;
+}
+
+:focus-visible {
+    outline: 2px solid var(--blue);
+    outline-offset: -2px;
+    border-radius: 6px;
+}
+
+::selection {
+    background: color-mix(in srgb, var(--blue) 30%, transparent);
+}
+
+page-home,
+page-help,
+page-init,
+page-interpolate,
+admin-app {
+    display: block;
+}
+
+.icon {
+    width: 22px;
+    height: 22px;
+    flex: none;
+}
+
+.muted {
+    color: var(--text-2);
+    font-size: 15px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* 包裹层:让 html() 单根模板可以包含 header+main 两个兄弟节点,
+   且不影响 sticky/flex 布局语义 */
+.contents {
+    display: contents;
+}
+
+/* ---------- 内容列宽 ---------- */
+
+main {
+    display: block;
+    max-width: 640px;
+    margin: 0 auto;
+    padding-top: 16px;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+}
+
+.page-footer {
+    margin: 8px 32px 0;
+    color: var(--text-3);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* ---------- 导航栏 ---------- */
+
+.navbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    height: calc(var(--nav-h) + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) 0 0;
+    background: var(--blur-bg);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+}
+
+.navbar::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--sep);
+}
+
+.nav-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 46%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 17px;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.nav-left,
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-height: var(--nav-h);
+    padding: 0 10px;
+    border: 0;
+    background: none;
+    color: var(--blue);
+    font: inherit;
+    font-size: 17px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-left {
+    margin-left: 4px;
+}
+
+.nav-left .icon {
+    width: 24px;
+    height: 24px;
+    margin-left: -6px;
+}
+
+.nav-left:active,
+.nav-right:active {
+    opacity: 0.45;
+}
+
+.nav-right {
+    margin-left: auto;
+    margin-right: 8px;
+    font-weight: 600;
+}
+
+.nav-right:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    padding: 0 10px 0 16px;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.nav-brand strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-appicon {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: var(--blue);
+    color: #fff;
+    flex: none;
+}
+
+.nav-appicon .icon {
+    width: 17px;
+    height: 17px;
+}
+
+.nav-badge {
+    flex: none;
+    margin-left: auto;
+    margin-right: 14px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--fill-1);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ---------- 底部标签栏(管理后台) ---------- */
+
+/* 平板/桌面端为 640px 居中列(与公共页 main 对齐),手机端不受影响 */
+.admin-app {
+    max-width: 640px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    position: relative;
+}
+
+.tabbar {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    z-index: 30;
+    display: flex;
+    width: 100%;
+    max-width: 640px;
+    height: calc(var(--tab-h) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--blur-bg);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+}
+
+.tabbar::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    background: var(--sep);
+}
+
+.tab-btn {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1px;
+    min-width: 0;
+    padding: 5px 2px 0;
+    border: 0;
+    background: none;
+    color: var(--text-3);
+    font: inherit;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.tab-btn .icon {
+    width: 26px;
+    height: 26px;
+    stroke-width: 1.7;
+}
+
+.tab-btn:active {
+    opacity: 0.55;
+}
+
+.tab-btn.active {
+    color: var(--blue);
+}
+
+/* 管理后台页面底部为标签栏留白 */
+.page-root {
+    padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom) + 28px);
+}
+
+/* ---------- 导航栈与 push 转场(nav-stack web component) ---------- */
+
+nav-stack {
+    position: relative;
+    display: block;
+}
+
+/* push 详情页(inset:0)以 nav-stack 为包含块:
+   pushed 时必须把栈撑到全屏,否则列表页内容较矮时详情页会被裁短 */
+nav-stack.pushed {
+    min-height: 100dvh;
+}
+
+.page-root {
+    background: var(--bg);
+    transition:
+        transform var(--push-ms) var(--push-ease),
+        opacity var(--push-ms) var(--push-ease);
+}
+
+.page-root[hidden] {
+    display: none;
+}
+
+nav-stack.pushed .page-root.active {
+    transform: translateX(-26%);
+    opacity: 0.6;
+}
+
+.push-page {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    transform: translateX(100%);
+    transition: transform var(--push-ms) var(--push-ease);
+    overscroll-behavior: contain;
+}
+
+.push-page.open {
+    transform: translateX(0);
+}
+
+.push-page.leaving {
+    transform: translateX(100%);
+}
+
+.push-content {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ---------- 分组内嵌列表 ---------- */
+
+.section-h {
+    margin: 6px 32px 8px;
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.section-h:first-child {
+    margin-top: 8px;
+}
+
+.list-group {
+    margin: 0 16px 24px;
+    border-radius: var(--radius-group);
+    background: var(--bg-elevated);
+    overflow: hidden;
+}
+
+.list-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 16px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+}
+
+a.list-row,
+button.list-row,
+label.list-row {
+    cursor: pointer;
+}
+
+/* iOS 行按压高亮 */
+a.list-row:active,
+button.list-row:active,
+label.list-row:active {
+    background: var(--fill-2);
+}
+
+/* 分组内相邻行之间的分隔线(行、纵向字段、纵向块任意组合) */
+.list-row + .list-row::before,
+.list-row + .row-stack::before,
+.list-row + .row-field::before,
+.row-stack + .list-row::before,
+.row-stack + .row-stack::before,
+.row-stack + .row-field::before,
+.row-field + .list-row::before,
+.row-field + .row-stack::before,
+.row-field + .row-field::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 16px;
+    right: 0;
+    height: 1px;
+    background: var(--sep);
+}
+
+.list-row.destructive {
+    justify-content: center;
+    color: var(--red);
+    font-size: 17px;
+    min-height: 46px;
+}
+
+.list-row.destructive:active {
+    background: none;
+}
+
+.list-row.destructive.armed {
+    background: var(--red);
+    color: #fff;
+}
+
+.row-icon {
+    display: grid;
+    place-items: center;
+    width: 29px;
+    height: 29px;
+    border-radius: 7px;
+    background: var(--blue);
+    color: #fff;
+    flex: none;
+}
+
+.row-icon .icon {
+    width: 17px;
+    height: 17px;
+}
+
+.row-num {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--fill-1);
+    color: var(--text-2);
+    font-size: 15px;
+    font-weight: 600;
+    flex: none;
+}
+
+.row-main {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.row-title {
+    display: block;
+    font-size: 17px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.row-title.mono {
+    font-family: var(--mono);
+    font-size: 15px;
+}
+
+.row-sub {
+    display: block;
+    margin-top: 1px;
+    color: var(--text-2);
+    font-size: 13px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.row-value {
+    flex: none;
+    max-width: 45%;
+    color: var(--text-2);
+    font-size: 16px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.row-value.mono {
+    font-family: var(--mono);
+    font-size: 13px;
+}
+
+.row-chevron {
+    color: var(--text-3);
+    width: 17px;
+    height: 17px;
+    flex: none;
+}
+
+.row-check {
+    display: flex;
+    color: var(--blue);
+    flex: none;
+}
+
+.row-check .icon {
+    width: 19px;
+    height: 19px;
+    stroke-width: 2.4;
+}
+
+/* 行内小圆钮(删除模型等),44px 命中区由 padding 撑起 */
+.row-btn {
+    display: flex;
+    align-items: center;
+    border: 0;
+    background: none;
+    color: var(--red);
+    padding: 10px;
+    margin: -10px 0 -10px -12px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.row-btn .icon {
+    width: 21px;
+    height: 21px;
+}
+
+.row-btn:active {
+    opacity: 0.45;
+}
+
+.row-btn.blue {
+    color: var(--blue);
+    margin: -10px -12px -10px 0;
+}
+
+/* 行内裸输入控件:iOS 表单无边框,值右对齐 */
+.bare {
+    flex: 1 1 0;
+    min-width: 0;
+    border: 0;
+    background: none;
+    color: var(--text);
+    font: inherit;
+    font-size: 17px;
+    text-align: right;
+    padding: 6px 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.bare::placeholder {
+    color: var(--text-3);
+}
+
+.bare:focus {
+    outline: none;
+}
+
+.bare:focus-visible {
+    outline: none;
+}
+
+.bare.mono {
+    font-family: var(--mono);
+    font-size: 14px;
+}
+
+/* 行内左对齐输入(如新增模型),命中区由所在行撑起 */
+.bare.left {
+    text-align: left;
+}
+
+select.bare {
+    appearance: none;
+    -webkit-appearance: none;
+    text-align: right;
+    color: var(--text-2);
+    cursor: pointer;
+    padding-right: 0;
+}
+
+input[type='number'].bare::-webkit-inner-spin-button,
+input[type='number'].bare::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* 纵向行:label + 块级 textarea */
+.row-stack {
+    position: relative;
+    display: block;
+    padding: 10px 16px 12px;
+}
+
+.row-stack .row-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-2);
+    font-size: 13px;
+}
+
+/* 纵向字段行:标签在上、控件整行左对齐。
+   长 URL / API Key 不再与标签抢宽度而被裁切,手机上可完整读取与编辑。 */
+.row-field {
+    position: relative;
+    display: block;
+    padding: 8px 16px 10px;
+}
+
+.row-field .row-label {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--text-2);
+    font-size: 13px;
+    line-height: 1.3;
+}
+
+.row-field .bare {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 2px 0 3px;
+    text-overflow: ellipsis;
+}
+
+.row-field select.bare {
+    text-align: left;
+}
+
+textarea.bare {
+    display: block;
+    width: 100%;
+    min-height: 96px;
+    text-align: left;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+textarea.bare.code {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    min-height: 120px;
+}
+
+.group-footer {
+    margin: -14px 32px 24px;
+    color: var(--text-2);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+/* 行内按钮化的 row-main(选择默认模型等) */
+.row-main-btn {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0;
+    background: none;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.row-main-btn:active {
+    opacity: 0.5;
+}
+
+/* 行值内的小 spinner */
+.row-value .spinner {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+    margin: 4px 0;
+}
+
+/* ---------- iOS 开关 ---------- */
+
+.switch {
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 51px;
+    height: 31px;
+    margin: 0;
+    border-radius: 999px;
+    background: var(--fill-1);
+    transition: background 200ms ease;
+    cursor: pointer;
+    flex: none;
+}
+
+.switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.28);
+    transition: transform 200ms ease;
+}
+
+.switch:checked {
+    background: var(--green);
+}
+
+.switch:checked::after {
+    transform: translateX(20px);
+}
+
+/* ---------- 按钮 ---------- */
+
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 50px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--blue);
+    color: #fff;
+    font: inherit;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        filter 150ms ease,
+        opacity 150ms ease;
+}
+
+.btn:active {
+    filter: brightness(0.82);
+}
+
+.btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.btn.gray {
+    background: var(--fill-1);
+    color: var(--text);
+}
+
+.btn.plain {
+    background: none;
+    color: var(--blue);
+    min-height: 44px;
+}
+
+.btn-row {
+    display: flex;
+    gap: 12px;
+    padding: 0 16px;
+    margin-bottom: 24px;
+}
+
+/* ---------- 悬浮保存按钮:悬浮于 tabbar 上方,宽度对齐内容列 ---------- */
+
+.save-fab {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(var(--tab-h) + env(safe-area-inset-bottom) + 12px);
+    z-index: 31;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: min(calc(100% - 32px), 608px);
+    height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--blue);
+    color: #fff;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        filter 150ms ease,
+        opacity 150ms ease;
+}
+
+.save-fab:active {
+    filter: brightness(0.82);
+}
+
+.save-fab:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+/* 管理后台内容的安全下边距:tabbar + 悬浮按钮 + 余量,避免被遮挡 */
+.admin-app main {
+    padding-bottom: calc(var(--tab-h) + 72px + env(safe-area-inset-bottom));
+}
+
+/* ---------- Hero / 状态 ---------- */
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 32px 24px 20px;
+    text-align: center;
+}
+
+.app-icon {
+    display: grid;
+    place-items: center;
+    width: 86px;
+    height: 86px;
+    border-radius: 21px;
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 10px 26px color-mix(in srgb, var(--blue) 34%, transparent);
+}
+
+.app-icon .icon {
+    width: 44px;
+    height: 44px;
+    stroke-width: 1.6;
+}
+
+.hero h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+}
+
+.hero .muted {
+    max-width: 420px;
+    overflow-wrap: anywhere;
+}
+
+.status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 13px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.status-chip .icon {
+    width: 18px;
+    height: 18px;
+}
+
+.status-chip.ok {
+    background: color-mix(in srgb, var(--green) 15%, transparent);
+    color: var(--green);
+}
+
+.status-chip.err {
+    background: color-mix(in srgb, var(--red) 14%, transparent);
+    color: var(--red);
+}
+
+.status-chip.warn {
+    background: color-mix(in srgb, var(--orange) 16%, transparent);
+    color: var(--orange);
+}
+
+.big-status {
+    display: grid;
+    place-items: center;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+}
+
+.big-status.ok {
+    color: var(--green);
+    background: color-mix(in srgb, var(--green) 15%, transparent);
+}
+
+.big-status.err {
+    color: var(--red);
+    background: color-mix(in srgb, var(--red) 14%, transparent);
+}
+
+.big-status .icon {
+    width: 42px;
+    height: 42px;
+    stroke-width: 2;
+}
+
+.spinner {
+    width: 22px;
+    height: 22px;
+    border: 2.5px solid var(--fill-1);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ---------- 提示 ---------- */
+
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    border-radius: var(--radius-group);
+    padding: 12px 16px;
+    font-size: 15px;
+    line-height: 1.45;
+}
+
+.alert .icon {
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+}
+
+.alert.warn {
+    background: color-mix(in srgb, var(--orange) 15%, transparent);
+    color: color-mix(in srgb, var(--orange) 80%, var(--text));
+}
+
+.alert.err {
+    background: color-mix(in srgb, var(--red) 13%, transparent);
+    color: color-mix(in srgb, var(--red) 85%, var(--text));
+}
+
+.code-block {
+    margin: 0 16px 24px;
+    border-radius: var(--radius-group);
+    background: var(--bg-elevated);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: 50dvh;
+}
+
+.code-block pre {
+    margin: 0;
+    padding: 13px 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* ---------- Toast ---------- */
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: max(28px, calc(env(safe-area-inset-bottom) + 16px));
+    transform: translateX(-50%) translateY(10px);
+    max-width: calc(100vw - 40px);
+    padding: 11px 20px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bg-elevated) 90%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    backdrop-filter: saturate(180%) blur(16px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+    opacity: 0;
+    transition:
+        opacity 220ms ease,
+        transform 220ms ease;
+    pointer-events: none;
+    z-index: 40;
+}
+
+.toast.error {
+    color: var(--red);
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+admin-app-body .toast,
+body[data-page='admin'] .toast {
+    bottom: calc(var(--tab-h) + env(safe-area-inset-bottom) + 18px);
+}
+
+/* ---------- 插值测试器(桌面优先) ---------- */
+
+.pg-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px calc(20px + env(safe-area-inset-bottom));
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.pane {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-radius: var(--radius-group);
+    background: var(--bg-elevated);
+    overflow: hidden;
+}
+
+.pane-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--sep);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.pane-head .icon {
+    width: 15px;
+    height: 15px;
+}
+
+.pane textarea,
+.pane pre {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0;
+    border: 0;
+    padding: 12px 14px;
+    background: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    outline: none;
+    resize: none;
+}
+
+.pane textarea {
+    min-height: 220px;
+}
+
+.pane .error {
+    color: var(--red);
+}
+
+@media (min-width: 900px) {
+    body[data-page='interpolate'] {
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    body[data-page='interpolate'] page-interpolate {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+
+    body[data-page='interpolate'] .pg-grid {
+        flex: 1 1 auto;
+        display: grid;
+        grid-template-areas:
+            'template data'
+            'preview preview';
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);
+        min-height: 0;
+    }
+
+    body[data-page='interpolate'] #template-area {
+        grid-area: template;
+    }
+
+    body[data-page='interpolate'] #data-area {
+        grid-area: data;
+    }
+
+    body[data-page='interpolate'] .preview-area {
+        grid-area: preview;
+    }
+
+    body[data-page='interpolate'] .pane textarea {
+        min-height: 0;
+    }
+}
+
+/* ---------- 桌面适配:内容页更舒展 ---------- */
+
+@media (min-width: 900px) {
+    .hero {
+        padding-top: 64px;
+    }
+
+    .hero h1 {
+        font-size: 34px;
+    }
+}
+
+/* 管理后台在桌面端呈现为居中列宽,并加侧边发丝线 */
+@media (min-width: 680px) {
+    .admin-app {
+        border-left: 1px solid var(--sep);
+        border-right: 1px solid var(--sep);
+    }
+
+    .push-page {
+        left: calc(50% - 320px);
+        right: auto;
+        width: 640px;
+    }
+}
+
+/* ---------- 动效偏好 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
+}

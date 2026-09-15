@@ -1,36 +1,91 @@
 {
     "name": "chatgpt-telegram-workers",
-    "type": "module",
-    "version": "1.8.0",
+    "version": "1.10.7",
     "description": "The easiest and quickest way to deploy your own ChatGPT Telegram bot is to use a single file and simply copy and paste it. There is no need for any dependencies, local development environment configuration, domain names, or servers.",
-    "author": "TBXark",
     "license": "MIT",
+    "author": "tbxark <tbxark@outlook.com>",
+    "repository": "git@github.com:TBXark/ChatGPT-Telegram-Workers.git",
+    "files": [
+        "./dist/index.js"
+    ],
+    "type": "module",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
     "exports": {
         ".": {
-            "import": "./dist/index.js"
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
         }
     },
-    "module": "dist/index.js",
-    "files": [
-        "dist"
-    ],
     "scripts": {
-        "lint": "eslint --fix *.js *.json src adapter",
-        "build": "vite build",
-        "debug": "wrangler dev --local",
+        "lint": "oxlint",
+        "version": "tsx scripts/gen-version.ts",
+        "typecheck": "tsc -b tsconfig.check.json && tsc -p packages/lib/web/tsconfig.json",
+        "build": "pnpm run typecheck && pnpm -r run build",
+        "test": "pnpm -r run test",
+        "test:e2e": "pnpm run build:server && pnpm tsx packages/apps/server/test/e2e/run.ts",
+        "test:e2e:web": "pnpm run build:server && pnpm --filter @chatgpt-telegram-workers/test-web run test:browser",
+        "build:plugins": "pnpm run --filter @chatgpt-telegram-workers/plugins... build",
+        "build:types": "pnpm run --filter @chatgpt-telegram-workers/types... build",
+        "build:ai": "pnpm run --filter @chatgpt-telegram-workers/ai... build",
+        "build:i18n": "pnpm run --filter @chatgpt-telegram-workers/i18n... build",
+        "build:config": "pnpm run --filter @chatgpt-telegram-workers/config... build",
+        "build:agent": "pnpm run --filter @chatgpt-telegram-workers/agent... build",
+        "build:telegram": "pnpm run --filter @chatgpt-telegram-workers/telegram... build",
+        "build:web": "pnpm run --filter @chatgpt-telegram-workers/web... build",
+        "build:core": "pnpm run --filter @chatgpt-telegram-workers/core... build",
+        "build:workers": "pnpm run --filter @chatgpt-telegram-workers/workers... build",
+        "build:server": "pnpm run --filter @chatgpt-telegram-workers/server... build",
+        "build:docker": "docker build -t chatgpt-telegram-workers:latest .",
+        "build:dockerx": "docker buildx build --platform linux/amd64,linux/arm64 -t chatgpt-telegram-workers:latest .",
+        "build:dist": "pnpm run version && pnpm run build:workers && cp -r packages/apps/workers/dist/index.js dist/",
+        "deploy": "pnpm run version && wrangler deploy",
+        "deploy:builds": "pnpm run version && tsx scripts/gen-wrangler-deploy.ts && wrangler deploy --config wrangler.deploy.jsonc",
+        "deploy:preview": "pnpm run version && tsx scripts/gen-wrangler-deploy.ts && wrangler versions upload --config wrangler.deploy.jsonc",
+        "deploy:workers": "WRANGLER_PATH=$INIT_CWD/wrangler.jsonc pnpm run --filter @chatgpt-telegram-workers/workers deploy",
+        "deploy:vercel": "pnpm run build:server && vercel --prod",
+        "start:local": "pnpm run build:server && CONFIG_PATH=$INIT_CWD/config.json WRANGLER_PATH=$INIT_CWD/wrangler.jsonc pnpm run --filter @chatgpt-telegram-workers/server start",
+        "vercel:syncenv": "tsx scripts/vercel-sync-env.ts && vercel --prod",
+        "clean": "pnpm -r run clean",
         "wrangler": "wrangler",
-        "deploy:dist": "wrangler deploy",
-        "deploy:build": "npm run build && wrangler deploy"
+        "lint:fix": "oxlint --fix",
+        "format": "oxfmt 'packages/**/*.ts' 'packages/**/*.js' 'scripts/**/*.ts' '*.ts' '*.js' '*.json'",
+        "format:check": "oxfmt --check 'packages/**/*.ts' 'packages/**/*.js' 'scripts/**/*.ts' '*.ts' '*.js' '*.json'"
     },
-    "dependencies": {},
     "devDependencies": {
-        "@antfu/eslint-config": "^2.25.1",
-        "@rollup/plugin-node-resolve": "^15.2.3",
-        "eslint": "^9.8.0",
-        "eslint-plugin-format": "^0.1.2",
-        "rollup-plugin-cleanup": "^3.2.1",
-        "typescript": "^5.5.4",
-        "vite": "^5.2.10",
-        "wrangler": "^3.69.1"
+        "@cloudflare/vitest-pool-workers": "^0.22.0",
+        "@types/node": "^26.5.1",
+        "esbuild": "^0.28.2",
+        "jsonc-parser": "^3.3.1",
+        "oxfmt": "^0.68.0",
+        "oxlint": "^1.83.0",
+        "tsx": "^4.23.13",
+        "typescript": "^7.0.2",
+        "vite": "^8.3.0",
+        "vitest": "^4.1.11",
+        "wrangler": "^4.131.2"
+    },
+    "engines": {
+        "node": ">=24.0.0"
+    },
+    "packageManager": "pnpm@12.4.1",
+    "cloudflare": {
+        "label": "ChatGPT-Telegram-Workers",
+        "products": [
+            "Workers",
+            "KV"
+        ],
+        "docs_url": "https://github.com/TBXark/ChatGPT-Telegram-Workers#readme",
+        "bindings": {
+            "TELEGRAM_TOKEN": {
+                "description": "Telegram bot token from [@BotFather](https://t.me/BotFather) (`/newbot`)."
+            },
+            "ADMIN_ID": {
+                "description": "Your Telegram user id from [@userinfobot](https://t.me/userinfobot). Authorizes the admin panel and private-chat commands."
+            },
+            "ADMIN_PASSWORD": {
+                "description": "Optional password for signing in to `/admin` from a plain browser outside Telegram."
+            }
+        }
     }
 }

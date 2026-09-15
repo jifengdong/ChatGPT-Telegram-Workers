@@ -8,6 +8,9 @@ ChatGPT-Telegram-Workers
 <p align="center">
     <em>轻松在Cloudflare Workers上部署您自己的Telegram ChatGPT机器人。</em>
 </p>
+<p align="center">
+    <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/TBXark/ChatGPT-Telegram-Workers"><img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare"></a>
+</p>
 
 ## 关于
 
@@ -15,33 +18,35 @@ ChatGPT-Telegram-Workers
 
 <details>
 <summary>查看Demo</summary>
-<img style="max-width: 600px;" alt="image" src="doc/demo.jpg">
+<img style="max-width: 600px;" alt="image" src="doc/demo.png">
 </details>
 
 ## 特性
 
 - 无服务器部署
-- 多平台部署支持(Cloudflare Workers, Vercel, Render[...](doc/cn/PLATFORM.md))
-- 适配多种AI服务商(OpenAI, Azure OpenAI, Cloudflare AI, Cohere, Anthropic, Mistral...)
+- 多平台部署支持(Cloudflare Workers, Vercel, Docker[...](doc/cn/DEPLOY_OTHERS.md))
+- 适配多种AI服务商(OpenAI, Cloudflare AI, Cohere, Anthropic, Mistral...)
+- Web 管理后台(Telegram Mini App)管理 AI 提供商与各项设置
 - 自定义指令(可以实现快速切换模型,切换机器人预设)
-- 支持多个Telegram机器人
+- 基于 KV 的简洁配置
 - 流式输出
 - 多语言支持
 - 文字生成图片
+- [插件系统](doc/cn/PLUGINS.md),可以自定义插件
 
 ## 文档
 
-- [如何部署](./doc/cn/DEPLOY.md)
-- [如何进行配置](./doc/cn/CONFIG.md)
-- [自动更新](./doc/cn/ACTION.md)
-- [支持平台](./doc/cn/PLATFORM.md)
+- [一键部署](https://deploy.workers.cloudflare.com/?url=https://github.com/TBXark/ChatGPT-Telegram-Workers) —— Cloudflare 会克隆仓库、创建 KV namespace、询问 Bot Token 并完成部署。
+- [部署Cloudflare Workers](./doc/cn/DEPLOY.md)
+- [部署Vercel、本地、Docker](./doc/cn/DEPLOY_OTHERS.md)
+- [配置参数和指令](./doc/cn/CONFIG.md)
+- [插件系统](./doc/cn/PLUGINS.md)
+- [v1 迁移到 v2 指南](./doc/cn/MIGRATION.md)
 - [变更日志](./doc/cn/CHANGELOG.md)
 
-## 特别感谢
+## 关联项目
 
-![https://www.jetbrains.com/?from=tbxark](https://user-images.githubusercontent.com/9513891/236592683-1ea579cf-08ff-4703-b313-db038f62bab0.svg)
-
-感谢[JetBrains](https://www.jetbrains.com/?from=tbxark)提供的开源开发许可证。
+- [telegram-bot-api-types](https://github.com/TBXark/telegram-bot-api-types) 编译后0输出的Telegram Bot API SDK, 文档齐全,支持所有API
 
 ## 贡献者
 

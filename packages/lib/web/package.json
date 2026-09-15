@@ -1,0 +1,18 @@
+{
+    "name": "@chatgpt-telegram-workers/web",
+    "version": "1.10.7",
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./index.d.ts",
+    "scripts": {
+        "build": "tsc -p tsconfig.json && pnpm vite build",
+        "dev": "pnpm vite",
+        "clean": "rm -rf dist && rm -rf node_modules && rm -rf tsconfig.tsbuildinfo"
+    },
+    "dependencies": {
+        "@chatgpt-telegram-workers/plugins": "workspace:*"
+    },
+    "devDependencies": {
+        "vite": "^8.3.0"
+    }
+}

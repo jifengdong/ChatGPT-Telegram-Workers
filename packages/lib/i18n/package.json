@@ -1,0 +1,11 @@
+{
+    "name": "@chatgpt-telegram-workers/i18n",
+    "version": "1.10.7",
+    "type": "module",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "build": "tsc -b",
+        "clean": "rm -rf dist && rm -rf node_modules && rm -rf tsconfig.tsbuildinfo"
+    }
+}

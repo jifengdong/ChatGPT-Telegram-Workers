@@ -1,0 +1,10 @@
+{
+    "extends": "../../../tsconfig.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "types": ["node", "vitest/globals"],
+        "outDir": "./dist"
+    },
+    "references": [{ "path": "../ai" }, { "path": "../config" }],
+    "include": ["src/**/*"]
+}
